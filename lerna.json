@@ -1,0 +1,10 @@
+{
+    "version": "0.1.7",
+    "packages": [
+        "packages/*",
+        "agent",
+        "client",
+        "!packages/_examples"
+    ],
+    "npmClient": "pnpm"
+}
