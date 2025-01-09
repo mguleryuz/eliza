@@ -5,7 +5,6 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "start": "serve dist -p 5173",
         "build": "vite build",
         "check-types": "tsc --noEmit",
         "lint": "eslint .",
@@ -27,8 +26,7 @@
         "tailwind-merge": "2.5.5",
         "tailwindcss-animate": "1.0.7",
         "vite-plugin-top-level-await": "1.4.4",
-        "vite-plugin-wasm": "3.3.0",
-        "serve": "^14.2.4"
+        "vite-plugin-wasm": "3.3.0"
     },
     "devDependencies": {
         "@eslint/js": "9.16.0",
