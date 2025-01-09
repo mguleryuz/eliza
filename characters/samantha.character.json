@@ -1,6 +1,6 @@
 {
     "name": "samantha",
-    "clients": [],
+    "clients": ["twitter"],
     "modelProvider": "anthropic",
     "settings": {
         "secrets": {},
