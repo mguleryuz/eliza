@@ -1,5 +1,5 @@
-# Use a specific Node.js version for better reproducibility
-FROM node:23.3.0-slim AS builder
+# Stage 1: Build Stage
+FROM node:23.3.0-slim AS base
 
 # Install pnpm globally and install necessary build tools
 RUN npm install -g pnpm@9.4.0 && \
@@ -8,48 +8,43 @@ RUN npm install -g pnpm@9.4.0 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set Python 3 as the default python
-RUN ln -s /usr/bin/python3 /usr/bin/python
+FROM base AS builder
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and other configuration files
+# Copy dependency-related files to leverage caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json ./
 
-# Copy the rest of the application code
+# Copy the rest of the source code
 COPY agent ./agent
 COPY packages ./packages
 COPY scripts ./scripts
 COPY characters ./characters
+COPY client ./client
 
-# Install dependencies and build the project
-RUN pnpm install \
-    && pnpm build-docker \
-    && pnpm prune --prod
+# Install dependencies using BuildKit cache for pnpm store
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Create a new stage for the final image
-FROM node:23.3.0-slim
+# Build the project and prune dev dependencies
+RUN pnpm build-docker && \
+    pnpm prune --prod
 
-# Install runtime dependencies if needed
-RUN npm install -g pnpm@9.4.0 && \
-    apt-get update && \
-    apt-get install -y git python3 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Stage 2: Final Production Image
+FROM base
 
+# Set working directory
 WORKDIR /app
 
-# Copy built artifacts and production dependencies from the builder stage
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/.npmrc ./
-COPY --from=builder /app/turbo.json ./
+# Copy only necessary files and production dependencies
+COPY --from=builder /app/package.json /app/pnpm-workspace.yaml /app/.npmrc /app/turbo.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/agent ./agent
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
+COPY --from=builder /app/client ./client
 
-# Set the command to run the application
-CMD ["pnpm", "start", "--character=characters/samantha.character.json"]
+# Default command
+CMD ["sh", "-c", "pnpm start --character=characters/${CHARACTER_NAME:-samantha}.character.json & pnpm start:client"]
