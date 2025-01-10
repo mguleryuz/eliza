@@ -68,6 +68,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{env.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.set-vars.outputs.tag }}
+          CHARACTER_NAME : ${{vars.CHARACTER_NAME}}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          CHARACTER_NAME=$CHARACTER_NAME docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
