@@ -1,5 +1,22 @@
 # Changelog
 
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## 1.0.0-dev.0 (2025-01-10)
+
+
+### Features
+
+* samantha ([ba8a355](https://github.com/mguleryuz/eliza/commit/ba8a3553700d591262313a6552c37cd708658b65))
+
+
+### Bug Fixes
+
+* dockerfile ([33bcedc](https://github.com/mguleryuz/eliza/commit/33bcedc3d2b1f1d1c53796e9d781752014613541))
+* revert to client dev instance ([5d46d65](https://github.com/mguleryuz/eliza/commit/5d46d659c798bc3e68a2b8f29375d393d5f30f01))
+
+# Changelog
+
 ## [v0.1.7](https://github.com/elizaOS/eliza/tree/v0.1.7) (2025-01-04)
 
 [Full Changelog](https://github.com/elizaOS/eliza/compare/v0.1.7-alpha.2...v0.1.7)
