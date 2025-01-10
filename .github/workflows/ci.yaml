@@ -1,45 +1,68 @@
 name: ci
+
 on:
     push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+      tags:
+        - 'v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+'
+        - 'v[0-9]+.[0-9]+.[0-9]+'
+    workflow_dispatch:
+
 jobs:
-    check:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
 
-            - uses: pnpm/action-setup@v3
-              with:
-                  version: 9.4.0
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # This ensures submodules are checked out
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: "23"
-                  cache: "pnpm"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
 
-            - name: Install dependencies
-              run: pnpm install -r --no-frozen-lockfile
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{vars.AWS_REGION}}
 
-            - name: Run Prettier
-              run: pnpm run prettier --check .
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-            - name: Run Linter
-              run: pnpm run lint
+      - name: Set Image Tag and Repository Name
+        id: set-vars
+        run: |
+          # Set tag based on ref type and pattern
+          if [[ "${GITHUB_REF}" == *"-dev"* ]]; then
+            echo "tag=dev" >> $GITHUB_OUTPUT
+          else
+            echo "tag=prod" >> $GITHUB_OUTPUT
+          fi
+          # Get repository name from package.json
+          REPO_NAME=$(node -p "require('./package.json').name")
+          echo "repository=$REPO_NAME" >> $GITHUB_OUTPUT
 
-            - name: Create test env file
-              run: |
-                  echo "TEST_DATABASE_CLIENT=sqlite" > packages/core/.env.test
-                  echo "NODE_ENV=test" >> packages/core/.env.test
+      - name: Create ECR repository if not exists
+        run: |
+          aws ecr describe-repositories --repository-names ${{ steps.set-vars.outputs.repository }} || \
+          aws ecr create-repository --repository-name ${{ steps.set-vars.outputs.repository }}
 
-            - name: Run tests
-              run: cd packages/core && pnpm test:coverage
-
-            - name: Build packages
-              run: pnpm run build
-
-            - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ steps.set-vars.outputs.repository }}
+          IMAGE_TAG: ${{ steps.set-vars.outputs.tag }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
