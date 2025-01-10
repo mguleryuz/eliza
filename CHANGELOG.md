@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/mguleryuz/eliza/compare/v1.0.0-dev.0...v1.0.0) (2025-01-10)
+
+
+### Bug Fixes
+
+* pipelines ([eb74f0c](https://github.com/mguleryuz/eliza/commit/eb74f0cacb39d4b5421ea68754721c4b61c90b88))
+
 ## 1.0.0-dev.0 (2025-01-10)
 
 
