@@ -62,6 +62,12 @@ run)
         CMD="$CMD -v \"$(pwd)/packages/$package/src:/app/packages/$package/src\""
     done
 
+    # Set character name from .env
+    if [ -f .env ] && grep -q "^CHARACTER_NAME=" .env; then
+        CHARACTER_NAME=$(grep "^CHARACTER_NAME=" .env | cut -d '=' -f2)
+        CMD="$CMD -e \"CHARACTER_NAME=$CHARACTER_NAME\""
+    fi
+
     # Add core types mount separately (special case)
     CMD="$CMD -v \"$(pwd)/packages/core/types:/app/packages/core/types\""
 

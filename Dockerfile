@@ -45,6 +45,3 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
 COPY --from=builder /app/client ./client
-
-# Default command
-CMD ["sh", "-c", "pnpm start --character=characters/${CHARACTER_NAME:-lauren}.character.json & pnpm start:client"]
